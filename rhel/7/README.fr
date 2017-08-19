@@ -1,0 +1,97 @@
+# Instructions pour l'installation des paquets Debian de pqChecker/pqMessenger
+# (c) 2015-2017, Abdelhamid MEDDEB <abdelhamid@meddeb.net>
+
+Ces paquets sont destinés uniquement au système GNU/Linux Redhat et CentOS.
+Testés sur CentOS 6 et 7.
+
+----- (I) ------
+Module pqChecker
+----------------
+
+1) Installer
+------------
+Nécessite les privilèges root:
+
+sudo dpkg -iv <nom-fichier-paquet> (exemple: pqchecker-2.0.0-1.el7.x86_64.rpm pour CentOS 7)
+
+2) Désinstaller
+---------------
+Nécessite les privilèges root:
+
+sudo rpm -ev pqchecker
+
+3) Dépendance
+-------------
+Dépend du paquet <openldap-servers>
+
+4) Emplacement du fichier binaire
+---------------------------------
+/usr/lib64/openldap/pqchecker.so
+
+------ (II) ------
+Module pqMessenger
+------------------
+
+1) Installer
+------------
+Nécessite les privilèges root:
+
+sudo dpkg -iv <nom-fichier-paquet> (exemple: pqmessenger-2.0.0-1.el7.x86_64.rpm pour CentOS 7)
+
+Après l'installation et avant le premier démarrage, créer le fichier keystore.jks dans /etc/openldap/pqchecker par la commande:
+
+keytool -genkey -alias pqmessenger -keyalg RSA -keystore keystore.jks -dname "CN=pqMessenger, OU=pqChecker, O=PPolicy, L=LDAPPPolicy, S=IDF, C=FR" -keysize 1024 -validity 365 -storepass <motDePasse> -keypass <motDePasse>
+
+Ou en utilisant le script pqmessenger-createkeystore.sh disponible avec les sources.
+
+Ensuite exécuer:
+
+sudo chown ldap:ldap keystore.jks
+sudo chmod 640 keystore.jks
+
+Ce même fichier doit être copié dans l'emplacement de configuration du serveur JMS.
+
+2) Désinstaller
+---------------
+Nécessite les privilèges root:
+
+sudo rpm -ev pqmessenger
+
+3) Paramètres de démarrage de pqMessenger
+-----------------------------------------
+Dans le fichier:
+/etc/default/pqmessenger
+
+Notamment:
+. JAVA_HOME: Dossier de Java JRE.
+. LOG_HOME: Dossier des fichiers de log. Nécessite les privileges d'écriture pour l'utilisateur système "ldap".
+. CONFIG_HOME: Dossier des fichiers de configuration.Nécessite les privileges de lecture pour l'utilisateur système "ldap".
+. NATIVE_LIB_HOME: doit être /usr/lib64/openldap
+
+4) Configuration de l'application serveur JMS
+---------------------------------------------
+Par défaut: 
+Adresse IP: 127.0.0.1 (machine locale)
+Port: 61616
+
+Peuvent être modifiés dans le fichier /etc/openldap/pqchecker/config.xml
+
+Le fichier /etc/openldap/pqchecker/keystore.jks doit être copié du côté de la configuration de l'application serveur JMS.
+
+5) Démarrage et arrêt de pqMessenger
+------------------------------------
+Au démarrage et à l'arrêt du système
+ou manuellement:
+
+Redhat/CentOS 6: sudo service pqmessenger start|stop
+Redhat/CentOS 7: sudo systemctl start|stop pqmessenger
+
+6) Dependances
+--------------
+Ce paquet dépend de: 
+. Paquets: <pqchecker> et <apache-commons-daemon-jsvc>
+. Java JRE
+
+7) Emplacement du fichier binaire
+---------------------------------
+/opt/pqmessenger/pqmessenger-2.0.0.jar
